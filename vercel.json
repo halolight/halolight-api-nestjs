@@ -1,0 +1,33 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/cron/reset-db.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/cron/reset-db",
+      "dest": "/api/cron/reset-db"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/reset-db",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

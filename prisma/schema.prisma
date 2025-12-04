@@ -1,0 +1,391 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SharePermission {
+  READ
+  EDIT
+  COMMENT
+}
+
+enum AttendeeStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model User {
+  id                String                       @id @default(cuid())
+  email             String                       @unique
+  phone             String?                      @unique
+  username          String                       @unique
+  password          String
+  name              String
+  avatar            String?
+  status            UserStatus                   @default(ACTIVE)
+  department        String?
+  position          String?
+  bio               String?
+  quotaUsed         BigInt                       @default(0)
+  lastLoginAt       DateTime?
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+  // Relations
+  roles             UserRole[]
+  teams             TeamMember[]
+  ownedTeams        Team[]                       @relation("TeamOwner")
+  documents         Document[]                   @relation("DocumentOwner")
+  sharedDocuments   DocumentShare[]
+  files             File[]
+  folders           Folder[]
+  ownedEvents       CalendarEvent[]              @relation("EventOwner")
+  eventAttendances  EventAttendee[]
+  notifications     Notification[]
+  conversations     ConversationParticipant[]
+  messages          Message[]
+  activities        ActivityLog[]
+  refreshTokens     RefreshToken[]
+
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  label       String
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  // Relations
+  permissions RolePermission[]
+  users       UserRole[]
+  teamMembers TeamMember[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  action      String           @unique // e.g., "users:view", "documents:*", "*"
+  resource    String // users, documents, etc.
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  // Relations
+  roles       RolePermission[]
+
+  @@index([action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Team {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  avatar      String?
+  ownerId     String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  // Relations
+  owner       User           @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     TeamMember[]
+  documents   Document[]
+  files       File[]
+  folders     Folder[]
+  shares      DocumentShare[] @relation("TeamShare")
+
+  @@map("teams")
+}
+
+model TeamMember {
+  teamId    String
+  userId    String
+  roleId    String?
+  joinedAt  DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role?    @relation(fields: [roleId], references: [id])
+
+  @@id([teamId, userId])
+  @@map("team_members")
+}
+
+model Document {
+  id          String          @id @default(cuid())
+  title       String
+  content     String          @db.Text
+  folder      String?
+  type        String // pdf, doc, image, etc.
+  size        BigInt          @default(0)
+  views       Int             @default(0)
+  ownerId     String
+  teamId      String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  // Relations
+  owner       User            @relation("DocumentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  team        Team?           @relation(fields: [teamId], references: [id])
+  shares      DocumentShare[]
+  tags        DocumentTag[]
+
+  @@index([ownerId])
+  @@index([teamId])
+  @@index([folder])
+  @@map("documents")
+}
+
+model DocumentShare {
+  id           String          @id @default(cuid())
+  documentId   String
+  sharedWithId String?
+  teamId       String?
+  permission   SharePermission @default(READ)
+  expiresAt    DateTime?
+  createdAt    DateTime        @default(now())
+  // Relations
+  document     Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sharedWith   User?           @relation(fields: [sharedWithId], references: [id])
+  team         Team?           @relation("TeamShare", fields: [teamId], references: [id])
+
+  @@index([documentId])
+  @@index([sharedWithId])
+  @@map("document_shares")
+}
+
+model Tag {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  createdAt DateTime      @default(now())
+  // Relations
+  documents DocumentTag[]
+
+  @@map("tags")
+}
+
+model DocumentTag {
+  documentId String
+  tagId      String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, tagId])
+  @@map("document_tags")
+}
+
+model Folder {
+  id        String   @id @default(cuid())
+  name      String
+  path      String   @unique
+  parentId  String?
+  ownerId   String
+  teamId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Relations
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  team      Team?    @relation(fields: [teamId], references: [id])
+  parent    Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children  Folder[] @relation("FolderHierarchy")
+  files     File[]
+
+  @@index([path])
+  @@index([ownerId])
+  @@map("folders")
+}
+
+model File {
+  id          String   @id @default(cuid())
+  name        String
+  path        String
+  mimeType    String
+  size        BigInt
+  thumbnail   String?
+  folderId    String?
+  ownerId     String
+  teamId      String?
+  isFavorite  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // Relations
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  team        Team?    @relation(fields: [teamId], references: [id])
+  folder      Folder?  @relation(fields: [folderId], references: [id])
+
+  @@index([ownerId])
+  @@index([folderId])
+  @@map("files")
+}
+
+model CalendarEvent {
+  id          String          @id @default(cuid())
+  title       String
+  description String?         @db.Text
+  startAt     DateTime
+  endAt       DateTime
+  type        String // meeting, task, reminder, holiday
+  color       String?
+  allDay      Boolean         @default(false)
+  location    String?
+  ownerId     String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  // Relations
+  owner       User            @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  attendees   EventAttendee[]
+  reminders   EventReminder[]
+
+  @@index([ownerId])
+  @@index([startAt, endAt])
+  @@map("calendar_events")
+}
+
+model EventAttendee {
+  eventId   String
+  userId    String
+  status    AttendeeStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  event     CalendarEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@map("event_attendees")
+}
+
+model EventReminder {
+  id        String        @id @default(cuid())
+  eventId   String
+  remindAt  DateTime
+  createdAt DateTime      @default(now())
+  event     CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_reminders")
+}
+
+model Conversation {
+  id           String                       @id @default(cuid())
+  name         String?
+  isGroup      Boolean                      @default(false)
+  avatar       String?
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  // Relations
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+  role           String?       @default("member") // owner, admin, member
+  unreadCount    Int           @default(0)
+  lastReadAt     DateTime?
+  joinedAt       DateTime      @default(now())
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  type           String       @default("text") // text, image, file
+  content        String       @db.Text
+  createdAt      DateTime     @default(now())
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String // system, user, message, task, alert
+  title     String
+  content   String    @db.Text
+  link      String?
+  payload   Json?
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String // e.g., "document.create", "user.update"
+  targetType String // document, file, user, etc.
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  // Relations
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
