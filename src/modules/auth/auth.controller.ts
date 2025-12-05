@@ -52,6 +52,29 @@ export class AuthController {
             email: { type: 'string', example: 'admin@halolight.h7ml.cn' },
             name: { type: 'string', example: 'Admin User' },
             avatar: { type: 'string', example: 'https://avatar.url' },
+            status: { type: 'string', enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'] },
+            roles: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  label: { type: 'string' },
+                },
+              },
+            },
+            permissions: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  action: { type: 'string' },
+                  resource: { type: 'string' },
+                },
+              },
+            },
           },
         },
       },
@@ -83,6 +106,29 @@ export class AuthController {
             email: { type: 'string' },
             username: { type: 'string' },
             name: { type: 'string' },
+            status: { type: 'string', enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'] },
+            roles: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  label: { type: 'string' },
+                },
+              },
+            },
+            permissions: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  action: { type: 'string' },
+                  resource: { type: 'string' },
+                },
+              },
+            },
           },
         },
       },
@@ -143,6 +189,18 @@ export class AuthController {
               id: { type: 'string' },
               name: { type: 'string' },
               label: { type: 'string' },
+            },
+          },
+        },
+        permissions: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              action: { type: 'string' },
+              resource: { type: 'string' },
+              description: { type: 'string', nullable: true },
             },
           },
         },

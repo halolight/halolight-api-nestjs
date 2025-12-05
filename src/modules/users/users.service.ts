@@ -87,6 +87,18 @@ export class UsersService {
                 name: true,
                 label: true,
                 description: true,
+                permissions: {
+                  select: {
+                    permission: {
+                      select: {
+                        id: true,
+                        action: true,
+                        resource: true,
+                        description: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -100,10 +112,27 @@ export class UsersService {
     }
 
     // Transform roles array to flatten structure and convert BigInt
+    const roles = user.roles.map(({ role }) => ({
+      ...role,
+      permissions: role.permissions.map((p) => p.permission),
+    }));
+
+    // Extract unique permissions across all roles
+    const permissions = Array.from(
+      roles
+        .flatMap((role) => role.permissions)
+        .reduce(
+          (acc, perm) => acc.set(perm.id, perm),
+          new Map<string, (typeof roles)[number]['permissions'][number]>(),
+        )
+        .values(),
+    );
+
     const transformedUser = {
       ...user,
       quotaUsed: Number(user.quotaUsed), // Convert BigInt to Number
-      roles: user.roles.map((ur) => ur.role),
+      roles,
+      permissions,
     };
 
     return transformedUser;
