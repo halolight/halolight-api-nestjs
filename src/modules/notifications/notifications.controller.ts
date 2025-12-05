@@ -1,12 +1,9 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
+  Put,
   Param,
   Delete,
-  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,80 +11,94 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiQuery,
-  ApiProperty,
 } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
 
-class CreateNotificationDto {
-  @ApiProperty({ description: 'Notification type', example: 'TASK_ASSIGNMENT' })
-  @IsString()
-  type: string;
-
-  @ApiProperty({ description: 'Notification message' })
-  @IsString()
-  message: string;
-
-  @ApiProperty({ description: 'Recipient user ID' })
-  @IsString()
-  recipientId: string;
-}
+// Mock notifications data
+const mockNotifications = [
+  {
+    id: 'notif_1',
+    type: 'system',
+    title: '欢迎使用 HaloLight',
+    content: '感谢您使用 HaloLight 管理后台，如有问题请随时反馈。',
+    read: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+    link: '/docs',
+  },
+  {
+    id: 'notif_2',
+    type: 'task',
+    title: '新任务分配',
+    content: '您有一个新任务：完成用户模块前端开发',
+    read: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    link: '/tasks/1',
+  },
+  {
+    id: 'notif_3',
+    type: 'message',
+    title: '新消息',
+    content: '张三 在研发团队群中@了您',
+    read: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    link: '/messages',
+    sender: { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' },
+  },
+  {
+    id: 'notif_4',
+    type: 'alert',
+    title: '安全提醒',
+    content: '检测到新设备登录，如非本人操作请及时修改密码。',
+    read: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+  },
+  {
+    id: 'notif_5',
+    type: 'user',
+    title: '成员加入',
+    content: '李四 已加入设计团队',
+    read: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+    sender: { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+  },
+];
 
 @ApiTags('Notifications')
 @ApiBearerAuth('JWT-auth')
 @Controller('notifications')
 export class NotificationsController {
   @Get()
-  @ApiOperation({ summary: 'List notifications' })
-  @ApiQuery({ name: 'unreadOnly', required: false, type: Boolean })
+  @ApiOperation({ summary: 'Get all notifications' })
   @ApiResponse({ status: 200, description: 'Notifications retrieved' })
-  async findAll(@Query('unreadOnly') unreadOnly?: boolean) {
-    return [
-      {
-        id: 'notif_1',
-        type: 'TASK_ASSIGNMENT',
-        message: 'You were assigned a task',
-        read: false,
-      },
-      {
-        id: 'notif_2',
-        type: 'SYSTEM',
-        message: 'System maintenance scheduled',
-        read: !unreadOnly,
-      },
-    ];
+  async findAll() {
+    return mockNotifications;
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get notification detail' })
+  @Get('unread-count')
+  @ApiOperation({ summary: 'Get unread notification count' })
+  @ApiResponse({ status: 200, description: 'Unread count retrieved' })
+  async getUnreadCount() {
+    const count = mockNotifications.filter(n => !n.read).length;
+    return { count };
+  }
+
+  @Put(':id/read')
+  @ApiOperation({ summary: 'Mark notification as read' })
   @ApiParam({ name: 'id', description: 'Notification ID' })
-  @ApiResponse({ status: 200, description: 'Notification found' })
-  async findOne(@Param('id') id: string) {
-    return {
-      id,
-      type: 'TASK_ASSIGNMENT',
-      message: 'You were assigned a task',
-      read: false,
-    };
+  @ApiResponse({ status: 200, description: 'Notification marked as read' })
+  async markAsRead(@Param('id') id: string) {
+    const notification = mockNotifications.find(n => n.id === id);
+    if (notification) {
+      notification.read = true;
+    }
+    return { success: true, id };
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Create notification' })
-  @ApiResponse({ status: 201, description: 'Notification created' })
-  async create(@Body() createNotificationDto: CreateNotificationDto) {
-    return { id: 'notif_new', ...createNotificationDto, read: false };
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update notification' })
-  @ApiParam({ name: 'id', description: 'Notification ID' })
-  @ApiResponse({ status: 200, description: 'Notification updated' })
-  async update(@Param('id') id: string, @Body() updateDto: { read?: boolean }) {
-    return {
-      id,
-      read: updateDto.read ?? false,
-      updatedAt: new Date().toISOString(),
-    };
+  @Put('read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @ApiResponse({ status: 200, description: 'All notifications marked as read' })
+  async markAllAsRead() {
+    mockNotifications.forEach(n => (n.read = true));
+    return { success: true };
   }
 
   @Delete(':id')

@@ -189,4 +189,35 @@ export class UsersController {
   async remove(@Param('id') id: string) {
     await this.usersService.remove(id);
   }
+
+  @Patch(':id/status')
+  @ApiOperation({
+    summary: 'Update user status',
+    description: 'Update user status (active, inactive, suspended)',
+  })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'User status updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string },
+  ) {
+    return this.usersService.update(id, { status: body.status as any });
+  }
+
+  @Post('batch-delete')
+  @ApiOperation({
+    summary: 'Batch delete users',
+    description: 'Delete multiple users at once',
+  })
+  @ApiResponse({ status: 200, description: 'Users deleted successfully' })
+  async batchDelete(@Body() body: { ids: string[] }) {
+    for (const id of body.ids) {
+      await this.usersService.remove(id);
+    }
+    return { success: true, deleted: body.ids.length };
+  }
 }

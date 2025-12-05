@@ -3,10 +3,9 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Delete,
-  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,12 +13,11 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiQuery,
   ApiProperty,
 } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
-class CreateMessageDto {
+class SendMessageDto {
   @ApiProperty({ description: 'Conversation ID', example: 'conv_1' })
   @IsString()
   conversationId: string;
@@ -28,76 +26,126 @@ class CreateMessageDto {
   @IsString()
   content: string;
 
-  @ApiProperty({ description: 'Sender user ID', example: 'user_1' })
+  @ApiProperty({ description: 'Message type', example: 'text', required: false })
+  @IsOptional()
   @IsString()
-  senderId: string;
+  type?: string;
 }
+
+// Mock conversations data
+const mockConversations = [
+  {
+    id: 'conv_1',
+    type: 'group',
+    name: '研发团队群',
+    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=devteam',
+    lastMessage: '新版本已经部署到测试环境了',
+    lastMessageTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    unreadCount: 3,
+    online: true,
+    members: [
+      { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
+      { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' },
+      { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+    ],
+  },
+  {
+    id: 'conv_2',
+    type: 'private',
+    name: '张经理',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager',
+    lastMessage: '确认了，周五正式发布',
+    lastMessageTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    unreadCount: 1,
+    online: true,
+    members: [
+      { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
+      { id: 'user_4', name: '张经理', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager' },
+    ],
+  },
+  {
+    id: 'conv_3',
+    type: 'private',
+    name: '李四',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi',
+    lastMessage: '设计稿已经更新了',
+    lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    unreadCount: 0,
+    online: false,
+    members: [
+      { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
+      { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+    ],
+  },
+];
+
+// Mock messages data
+const mockMessages: Record<string, any[]> = {
+  conv_1: [
+    { id: 'msg_1', sender: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' }, content: '大家好，欢迎加入研发团队群！', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), read: true },
+    { id: 'msg_2', sender: { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' }, content: '你好！很高兴加入团队 🎉', createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), read: true },
+    { id: 'msg_3', sender: { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' }, content: '新版本已经部署到测试环境了', createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), read: false },
+  ],
+  conv_2: [
+    { id: 'msg_4', sender: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' }, content: '张经理，下周的发布计划确认了吗？', createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), read: true },
+    { id: 'msg_5', sender: { id: 'user_4', name: '张经理', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager' }, content: '确认了，周五正式发布', createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), read: false },
+  ],
+  conv_3: [
+    { id: 'msg_6', sender: { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' }, content: '设计稿已经更新了', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), read: true },
+  ],
+};
 
 @ApiTags('Messages')
 @ApiBearerAuth('JWT-auth')
 @Controller('messages')
 export class MessagesController {
-  @Get()
-  @ApiOperation({ summary: 'List messages' })
-  @ApiQuery({ name: 'conversationId', required: true, type: String })
-  @ApiQuery({ name: 'page', required: false, type: Number })
+  @Get('conversations')
+  @ApiOperation({ summary: 'Get all conversations' })
+  @ApiResponse({ status: 200, description: 'Conversations retrieved' })
+  async getConversations() {
+    return mockConversations;
+  }
+
+  @Get(':conversationId')
+  @ApiOperation({ summary: 'Get messages in a conversation' })
+  @ApiParam({ name: 'conversationId', description: 'Conversation ID' })
   @ApiResponse({ status: 200, description: 'Messages retrieved' })
-  async findAll(
-    @Query('conversationId') conversationId: string,
-    @Query('page') _page?: number,
-  ) {
-    return [
-      {
-        id: 'msg_1',
-        content: 'Hello team!',
-        senderId: 'user_1',
-        conversationId,
-        createdAt: new Date().toISOString(),
-      },
-    ];
+  async getMessages(@Param('conversationId') conversationId: string) {
+    return mockMessages[conversationId] || [];
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get message detail' })
-  @ApiParam({ name: 'id', description: 'Message ID' })
-  @ApiResponse({ status: 200, description: 'Message found' })
-  async findOne(@Param('id') id: string) {
-    return {
-      id,
-      content: 'Hello team!',
-      senderId: 'user_1',
-      conversationId: 'conv_1',
+  @Post('send')
+  @ApiOperation({ summary: 'Send a message' })
+  @ApiResponse({ status: 201, description: 'Message sent' })
+  async sendMessage(@Body() dto: SendMessageDto) {
+    const newMessage = {
+      id: `msg_${Date.now()}`,
+      sender: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
+      type: dto.type || 'text',
+      content: dto.content,
       createdAt: new Date().toISOString(),
+      read: true,
     };
+    return newMessage;
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Send message' })
-  @ApiResponse({ status: 201, description: 'Message created' })
-  async create(@Body() createMessageDto: CreateMessageDto) {
-    return { id: 'msg_new', ...createMessageDto };
+  @Put(':conversationId/read')
+  @ApiOperation({ summary: 'Mark conversation as read' })
+  @ApiParam({ name: 'conversationId', description: 'Conversation ID' })
+  @ApiResponse({ status: 200, description: 'Marked as read' })
+  async markAsRead(@Param('conversationId') conversationId: string) {
+    const conversation = mockConversations.find(c => c.id === conversationId);
+    if (conversation) {
+      conversation.unreadCount = 0;
+    }
+    return { success: true, conversationId };
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update message' })
-  @ApiParam({ name: 'id', description: 'Message ID' })
-  @ApiResponse({ status: 200, description: 'Message updated' })
-  async update(
-    @Param('id') id: string,
-    @Body() updateDto: { content?: string },
-  ) {
-    return {
-      id,
-      content: updateDto.content || 'Hello team!',
-      updatedAt: new Date().toISOString(),
-    };
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete message' })
-  @ApiParam({ name: 'id', description: 'Message ID' })
-  @ApiResponse({ status: 200, description: 'Message deleted' })
-  async remove(@Param('id') id: string) {
-    return { id, deleted: true };
+  @Delete(':conversationId')
+  @ApiOperation({ summary: 'Delete conversation' })
+  @ApiParam({ name: 'conversationId', description: 'Conversation ID' })
+  @ApiResponse({ status: 200, description: 'Conversation deleted' })
+  async deleteConversation(@Param('conversationId') conversationId: string) {
+    return { id: conversationId, deleted: true };
   }
 }
