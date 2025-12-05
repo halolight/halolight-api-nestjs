@@ -36,62 +36,87 @@ async function main() {
   await prisma.user.deleteMany();
 
   // ==================== PERMISSIONS ====================
+  // Permission naming follows frontend convention: resource:action (view/create/edit/delete)
   console.log('🔒 Creating permissions...');
   const permissions = await Promise.all([
-    // Wildcard permission (super admin)
+    // [0] Wildcard permission (super admin)
     prisma.permission.create({
       data: { action: '*', resource: '*', description: 'Full system access' },
     }),
-    // User permissions
+    // Dashboard permissions [1]
     prisma.permission.create({
-      data: { action: 'users:*', resource: 'users', description: 'Full user management' },
+      data: { action: 'dashboard:view', resource: 'dashboard', description: 'View dashboard' },
     }),
+    // User permissions [2-5]
     prisma.permission.create({
-      data: { action: 'users:read', resource: 'users', description: 'View users' },
+      data: { action: 'users:view', resource: 'users', description: 'View users' },
     }),
     prisma.permission.create({
       data: { action: 'users:create', resource: 'users', description: 'Create users' },
     }),
     prisma.permission.create({
-      data: { action: 'users:update', resource: 'users', description: 'Update users' },
+      data: { action: 'users:edit', resource: 'users', description: 'Edit users' },
     }),
     prisma.permission.create({
       data: { action: 'users:delete', resource: 'users', description: 'Delete users' },
     }),
-    // Role permissions
+    // Analytics permissions [6-7]
     prisma.permission.create({
-      data: { action: 'roles:*', resource: 'roles', description: 'Full role management' },
+      data: { action: 'analytics:view', resource: 'analytics', description: 'View analytics' },
     }),
     prisma.permission.create({
-      data: { action: 'roles:read', resource: 'roles', description: 'View roles' },
+      data: { action: 'analytics:export', resource: 'analytics', description: 'Export analytics data' },
     }),
-    // Document permissions
+    // Settings permissions [8-9]
     prisma.permission.create({
-      data: { action: 'documents:*', resource: 'documents', description: 'Full document management' },
+      data: { action: 'settings:view', resource: 'settings', description: 'View settings' },
     }),
     prisma.permission.create({
-      data: { action: 'documents:read', resource: 'documents', description: 'View documents' },
+      data: { action: 'settings:edit', resource: 'settings', description: 'Edit settings' },
+    }),
+    // Document permissions [10-13]
+    prisma.permission.create({
+      data: { action: 'documents:view', resource: 'documents', description: 'View documents' },
     }),
     prisma.permission.create({
       data: { action: 'documents:create', resource: 'documents', description: 'Create documents' },
     }),
-    // Team permissions
     prisma.permission.create({
-      data: { action: 'teams:*', resource: 'teams', description: 'Full team management' },
+      data: { action: 'documents:edit', resource: 'documents', description: 'Edit documents' },
     }),
     prisma.permission.create({
-      data: { action: 'teams:read', resource: 'teams', description: 'View teams' },
+      data: { action: 'documents:delete', resource: 'documents', description: 'Delete documents' },
     }),
-    // Calendar permissions
+    // File permissions [14-16]
     prisma.permission.create({
-      data: { action: 'calendar:*', resource: 'calendar', description: 'Full calendar management' },
+      data: { action: 'files:view', resource: 'files', description: 'View files' },
     }),
     prisma.permission.create({
-      data: { action: 'calendar:read', resource: 'calendar', description: 'View calendar' },
+      data: { action: 'files:upload', resource: 'files', description: 'Upload files' },
     }),
-    // Dashboard permissions
     prisma.permission.create({
-      data: { action: 'dashboard:read', resource: 'dashboard', description: 'View dashboard' },
+      data: { action: 'files:delete', resource: 'files', description: 'Delete files' },
+    }),
+    // Message permissions [17-18]
+    prisma.permission.create({
+      data: { action: 'messages:view', resource: 'messages', description: 'View messages' },
+    }),
+    prisma.permission.create({
+      data: { action: 'messages:send', resource: 'messages', description: 'Send messages' },
+    }),
+    // Calendar permissions [19-20]
+    prisma.permission.create({
+      data: { action: 'calendar:view', resource: 'calendar', description: 'View calendar' },
+    }),
+    prisma.permission.create({
+      data: { action: 'calendar:edit', resource: 'calendar', description: 'Edit calendar events' },
+    }),
+    // Notification permissions [21-22]
+    prisma.permission.create({
+      data: { action: 'notifications:view', resource: 'notifications', description: 'View notifications' },
+    }),
+    prisma.permission.create({
+      data: { action: 'notifications:manage', resource: 'notifications', description: 'Manage notifications' },
     }),
   ]);
 
@@ -130,41 +155,79 @@ async function main() {
   });
 
   // Assign permissions to roles
+  // Permission indices:
+  // [0] *                    [1] dashboard:view
+  // [2] users:view           [3] users:create        [4] users:edit          [5] users:delete
+  // [6] analytics:view       [7] analytics:export
+  // [8] settings:view        [9] settings:edit
+  // [10] documents:view      [11] documents:create   [12] documents:edit     [13] documents:delete
+  // [14] files:view          [15] files:upload       [16] files:delete
+  // [17] messages:view       [18] messages:send
+  // [19] calendar:view       [20] calendar:edit
+  // [21] notifications:view  [22] notifications:manage
   console.log('🔗 Assigning permissions to roles...');
-  // Admin gets all permissions
+
+  // Admin gets wildcard permission (all access)
   await prisma.rolePermission.create({
     data: { roleId: adminRole.id, permissionId: permissions[0].id }, // *
   });
 
-  // Manager gets user and document management
+  // Manager gets most permissions except settings:edit and users:delete
   await prisma.rolePermission.createMany({
     data: [
-      { roleId: managerRole.id, permissionId: permissions[1].id }, // users:*
-      { roleId: managerRole.id, permissionId: permissions[8].id }, // documents:*
-      { roleId: managerRole.id, permissionId: permissions[11].id }, // teams:*
-      { roleId: managerRole.id, permissionId: permissions[13].id }, // calendar:*
-      { roleId: managerRole.id, permissionId: permissions[15].id }, // dashboard:read
+      { roleId: managerRole.id, permissionId: permissions[1].id },  // dashboard:view
+      { roleId: managerRole.id, permissionId: permissions[2].id },  // users:view
+      { roleId: managerRole.id, permissionId: permissions[3].id },  // users:create
+      { roleId: managerRole.id, permissionId: permissions[4].id },  // users:edit
+      { roleId: managerRole.id, permissionId: permissions[6].id },  // analytics:view
+      { roleId: managerRole.id, permissionId: permissions[7].id },  // analytics:export
+      { roleId: managerRole.id, permissionId: permissions[8].id },  // settings:view
+      { roleId: managerRole.id, permissionId: permissions[10].id }, // documents:view
+      { roleId: managerRole.id, permissionId: permissions[11].id }, // documents:create
+      { roleId: managerRole.id, permissionId: permissions[12].id }, // documents:edit
+      { roleId: managerRole.id, permissionId: permissions[13].id }, // documents:delete
+      { roleId: managerRole.id, permissionId: permissions[14].id }, // files:view
+      { roleId: managerRole.id, permissionId: permissions[15].id }, // files:upload
+      { roleId: managerRole.id, permissionId: permissions[16].id }, // files:delete
+      { roleId: managerRole.id, permissionId: permissions[17].id }, // messages:view
+      { roleId: managerRole.id, permissionId: permissions[18].id }, // messages:send
+      { roleId: managerRole.id, permissionId: permissions[19].id }, // calendar:view
+      { roleId: managerRole.id, permissionId: permissions[20].id }, // calendar:edit
+      { roleId: managerRole.id, permissionId: permissions[21].id }, // notifications:view
+      { roleId: managerRole.id, permissionId: permissions[22].id }, // notifications:manage
     ],
   });
 
-  // User gets basic permissions
+  // User gets standard operational permissions
   await prisma.rolePermission.createMany({
     data: [
-      { roleId: userRole.id, permissionId: permissions[2].id }, // users:read
-      { roleId: userRole.id, permissionId: permissions[9].id }, // documents:read
-      { roleId: userRole.id, permissionId: permissions[10].id }, // documents:create
-      { roleId: userRole.id, permissionId: permissions[12].id }, // teams:read
-      { roleId: userRole.id, permissionId: permissions[14].id }, // calendar:read
-      { roleId: userRole.id, permissionId: permissions[15].id }, // dashboard:read
+      { roleId: userRole.id, permissionId: permissions[1].id },  // dashboard:view
+      { roleId: userRole.id, permissionId: permissions[2].id },  // users:view
+      { roleId: userRole.id, permissionId: permissions[6].id },  // analytics:view
+      { roleId: userRole.id, permissionId: permissions[10].id }, // documents:view
+      { roleId: userRole.id, permissionId: permissions[11].id }, // documents:create
+      { roleId: userRole.id, permissionId: permissions[12].id }, // documents:edit
+      { roleId: userRole.id, permissionId: permissions[14].id }, // files:view
+      { roleId: userRole.id, permissionId: permissions[15].id }, // files:upload
+      { roleId: userRole.id, permissionId: permissions[17].id }, // messages:view
+      { roleId: userRole.id, permissionId: permissions[18].id }, // messages:send
+      { roleId: userRole.id, permissionId: permissions[19].id }, // calendar:view
+      { roleId: userRole.id, permissionId: permissions[20].id }, // calendar:edit
+      { roleId: userRole.id, permissionId: permissions[21].id }, // notifications:view
     ],
   });
 
   // Viewer gets read-only permissions
   await prisma.rolePermission.createMany({
     data: [
-      { roleId: viewerRole.id, permissionId: permissions[2].id }, // users:read
-      { roleId: viewerRole.id, permissionId: permissions[9].id }, // documents:read
-      { roleId: viewerRole.id, permissionId: permissions[15].id }, // dashboard:read
+      { roleId: viewerRole.id, permissionId: permissions[1].id },  // dashboard:view
+      { roleId: viewerRole.id, permissionId: permissions[2].id },  // users:view
+      { roleId: viewerRole.id, permissionId: permissions[6].id },  // analytics:view
+      { roleId: viewerRole.id, permissionId: permissions[10].id }, // documents:view
+      { roleId: viewerRole.id, permissionId: permissions[14].id }, // files:view
+      { roleId: viewerRole.id, permissionId: permissions[17].id }, // messages:view
+      { roleId: viewerRole.id, permissionId: permissions[19].id }, // calendar:view
+      { roleId: viewerRole.id, permissionId: permissions[21].id }, // notifications:view
     ],
   });
 
@@ -705,7 +768,7 @@ async function main() {
 
   console.log('\n✅ Database seeded successfully!\n');
   console.log('📊 Summary:');
-  console.log(`   - ${permissions.length} permissions`);
+  console.log(`   - ${permissions.length} permissions (23 total)`);
   console.log('   - 4 roles');
   console.log('   - 7 users');
   console.log('   - 3 teams');
