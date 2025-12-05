@@ -11,10 +11,9 @@ async function bootstrap() {
   });
 
   // Enable CORS with explicit origins to support credentials
-  const allowedOrigins =
-    process.env.CORS_ORIGIN?.split(',').map((origin) => origin.trim()) || [
-      'http://localhost:3000',
-    ];
+  const allowedOrigins = process.env.CORS_ORIGIN?.split(',').map((origin) =>
+    origin.trim(),
+  ) || ['http://localhost:3000'];
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
