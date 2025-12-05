@@ -153,6 +153,50 @@ export class DashboardController {
     }));
   }
 
+  @Get('pie')
+  @ApiOperation({ summary: 'Get pie chart data' })
+  @ApiResponse({ status: 200, description: 'Pie chart data retrieved' })
+  async getPie() {
+    const categories = [
+      { name: '电子产品', baseValue: 4000 },
+      { name: '服装服饰', baseValue: 3000 },
+      { name: '食品饮料', baseValue: 2500 },
+      { name: '家居用品', baseValue: 2000 },
+      { name: '运动户外', baseValue: 1500 },
+      { name: '其他', baseValue: 1000 },
+    ];
+    return categories.map((category) => ({
+      name: category.name,
+      value: category.baseValue + Math.floor(Math.random() * 1000),
+    }));
+  }
+
+  @Get('tasks')
+  @ApiOperation({ summary: 'Get task list' })
+  @ApiResponse({ status: 200, description: 'Tasks retrieved' })
+  async getTasks() {
+    const taskTitles = [
+      '完成项目报告',
+      '审核用户反馈',
+      '更新产品文档',
+      '修复登录问题',
+      '优化数据库查询',
+      '部署新版本',
+      '团队周会',
+      '代码审查',
+    ];
+    const statuses: ('pending' | 'in_progress' | 'done')[] = [
+      'pending',
+      'in_progress',
+      'done',
+    ];
+    return taskTitles.slice(0, 6).map((title, index) => ({
+      id: `task_${index + 1}`,
+      title,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+    }));
+  }
+
   @Get('overview')
   @ApiOperation({ summary: 'Get system overview' })
   @ApiResponse({ status: 200, description: 'Overview retrieved' })
