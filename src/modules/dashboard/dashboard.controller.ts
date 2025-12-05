@@ -33,7 +33,12 @@ export class DashboardController {
   @ApiOperation({ summary: 'Get visit trends (7 days)' })
   @ApiResponse({ status: 200, description: 'Visit data retrieved' })
   async getVisits() {
-    const data: { date: string; visits: number; uniqueVisitors: number; pageViews: number }[] = [];
+    const data: {
+      date: string;
+      visits: number;
+      uniqueVisitors: number;
+      pageViews: number;
+    }[] = [];
     const today = new Date();
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
@@ -96,14 +101,22 @@ export class DashboardController {
   @ApiResponse({ status: 200, description: 'Orders retrieved' })
   async getOrders() {
     const customers = ['张三', '李四', '王五', '赵六', '钱七', '孙八'];
-    const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const statuses = [
+      'pending',
+      'processing',
+      'shipped',
+      'delivered',
+      'cancelled',
+    ];
     return Array.from({ length: 10 }, (_, i) => ({
       id: `order_${i + 1}`,
       orderNo: `ORD${Date.now()}${i}`,
       customer: customers[Math.floor(Math.random() * customers.length)],
       amount: Math.floor(Math.random() * 5000) + 100,
       status: statuses[Math.floor(Math.random() * statuses.length)],
-      createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(
+        Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     }));
   }
 
@@ -112,15 +125,31 @@ export class DashboardController {
   @ApiResponse({ status: 200, description: 'Activities retrieved' })
   async getActivities() {
     const users = ['张三', '李四', '王五', '赵六'];
-    const actions = ['创建了文档', '更新了资料', '上传了文件', '发送了消息', '创建了订单', '修改了密码'];
-    const targets = ['项目计划书', '用户资料', '设计稿.psd', '研发团队群', '订单#1234', '账户安全'];
+    const actions = [
+      '创建了文档',
+      '更新了资料',
+      '上传了文件',
+      '发送了消息',
+      '创建了订单',
+      '修改了密码',
+    ];
+    const targets = [
+      '项目计划书',
+      '用户资料',
+      '设计稿.psd',
+      '研发团队群',
+      '订单#1234',
+      '账户安全',
+    ];
     return Array.from({ length: 8 }, (_, i) => ({
       id: `act_${i + 1}`,
       user: users[Math.floor(Math.random() * users.length)],
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i}`,
       action: actions[Math.floor(Math.random() * actions.length)],
       target: targets[Math.floor(Math.random() * targets.length)],
-      time: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+      time: new Date(
+        Date.now() - Math.random() * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     }));
   }
 

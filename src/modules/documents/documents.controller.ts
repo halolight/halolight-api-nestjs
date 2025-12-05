@@ -29,15 +29,24 @@ const mockDocuments = [
     type: 'document',
     size: 2048,
     folder: '/documents',
-    content: '# HaloLight API 使用指南\n\n## 概述\n\nHaloLight API 是基于 NestJS 构建的企业级后端服务...',
-    author: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
+    content:
+      '# HaloLight API 使用指南\n\n## 概述\n\nHaloLight API 是基于 NestJS 构建的企业级后端服务...',
+    author: {
+      id: 'user_1',
+      name: '系统管理员',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+    },
     shared: true,
     tags: ['技术文档', '重要'],
     views: 128,
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-15T10:30:00Z',
     collaborators: [
-      { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' },
+      {
+        id: 'user_2',
+        name: '张三',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
+      },
     ],
   },
   {
@@ -47,8 +56,13 @@ const mockDocuments = [
     type: 'document',
     size: 1536,
     folder: '/projects',
-    content: '# 2024年度产品规划\n\n## Q1 目标\n\n- 完成基础架构搭建\n- 实现用户认证模块',
-    author: { id: 'user_4', name: '张经理', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager' },
+    content:
+      '# 2024年度产品规划\n\n## Q1 目标\n\n- 完成基础架构搭建\n- 实现用户认证模块',
+    author: {
+      id: 'user_4',
+      name: '张经理',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager',
+    },
     shared: false,
     tags: ['重要', '项目计划'],
     views: 256,
@@ -64,7 +78,11 @@ const mockDocuments = [
     size: 1024,
     folder: '/design',
     content: '# UI设计规范\n\n## 色彩系统\n\n主色调: #6366f1',
-    author: { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+    author: {
+      id: 'user_3',
+      name: '李四',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi',
+    },
     shared: true,
     tags: ['设计规范'],
     views: 89,
@@ -96,15 +114,16 @@ export class DocumentsController {
     let docs = [...mockDocuments];
 
     if (type) {
-      docs = docs.filter(d => d.type === type);
+      docs = docs.filter((d) => d.type === type);
     }
     if (folder) {
-      docs = docs.filter(d => d.folder === folder);
+      docs = docs.filter((d) => d.folder === folder);
     }
     if (search) {
-      docs = docs.filter(d =>
-        d.title.toLowerCase().includes(search.toLowerCase()) ||
-        d.content?.toLowerCase().includes(search.toLowerCase())
+      docs = docs.filter(
+        (d) =>
+          d.title.toLowerCase().includes(search.toLowerCase()) ||
+          d.content?.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -121,8 +140,16 @@ export class DocumentsController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document found' })
   async findOne(@Param('id') id: string) {
-    const doc = mockDocuments.find(d => d.id === id);
-    return doc || { id, title: 'Unknown Document', content: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const doc = mockDocuments.find((d) => d.id === id);
+    return (
+      doc || {
+        id,
+        title: 'Unknown Document',
+        content: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+    );
   }
 
   @Post()
@@ -135,7 +162,11 @@ export class DocumentsController {
       name: dto.title,
       type: 'document',
       size: dto.content?.length || 0,
-      author: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
+      author: {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      },
       shared: false,
       tags: [],
       views: 0,
@@ -151,7 +182,7 @@ export class DocumentsController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document updated' })
   async update(@Param('id') id: string, @Body() dto: UpdateDocumentDto) {
-    const doc = mockDocuments.find(d => d.id === id);
+    const doc = mockDocuments.find((d) => d.id === id);
     if (doc) {
       Object.assign(doc, dto);
       doc.updatedAt = new Date().toISOString();
@@ -164,10 +195,10 @@ export class DocumentsController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document shared' })
   async share(@Param('id') id: string, @Body() body: { userIds: string[] }) {
-    const doc = mockDocuments.find(d => d.id === id);
+    const doc = mockDocuments.find((d) => d.id === id);
     if (doc) {
       doc.shared = true;
-      doc.collaborators = body.userIds.map(uid => ({
+      doc.collaborators = body.userIds.map((uid) => ({
         id: uid,
         name: `User ${uid}`,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}`,
@@ -181,10 +212,12 @@ export class DocumentsController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document unshared' })
   async unshare(@Param('id') id: string, @Body() body: { userIds?: string[] }) {
-    const doc = mockDocuments.find(d => d.id === id);
+    const doc = mockDocuments.find((d) => d.id === id);
     if (doc) {
       if (body.userIds) {
-        doc.collaborators = doc.collaborators.filter(c => !body.userIds!.includes(c.id));
+        doc.collaborators = doc.collaborators.filter(
+          (c) => !body.userIds!.includes(c.id),
+        );
       } else {
         doc.shared = false;
         doc.collaborators = [];
@@ -198,7 +231,7 @@ export class DocumentsController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document moved' })
   async move(@Param('id') id: string, @Body() body: { folder: string }) {
-    const doc = mockDocuments.find(d => d.id === id);
+    const doc = mockDocuments.find((d) => d.id === id);
     if (doc) {
       doc.folder = body.folder;
       doc.updatedAt = new Date().toISOString();
@@ -211,7 +244,7 @@ export class DocumentsController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Tags updated' })
   async updateTags(@Param('id') id: string, @Body() body: { tags: string[] }) {
-    const doc = mockDocuments.find(d => d.id === id);
+    const doc = mockDocuments.find((d) => d.id === id);
     if (doc) {
       doc.tags = body.tags;
       doc.updatedAt = new Date().toISOString();
@@ -224,7 +257,7 @@ export class DocumentsController {
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Document renamed' })
   async rename(@Param('id') id: string, @Body() body: { name: string }) {
-    const doc = mockDocuments.find(d => d.id === id);
+    const doc = mockDocuments.find((d) => d.id === id);
     if (doc) {
       doc.name = body.name;
       doc.title = body.name;

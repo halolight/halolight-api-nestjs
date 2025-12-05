@@ -26,7 +26,11 @@ class SendMessageDto {
   @IsString()
   content: string;
 
-  @ApiProperty({ description: 'Message type', example: 'text', required: false })
+  @ApiProperty({
+    description: 'Message type',
+    example: 'text',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   type?: string;
@@ -44,9 +48,21 @@ const mockConversations = [
     unreadCount: 3,
     online: true,
     members: [
-      { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
-      { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' },
-      { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+      {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      },
+      {
+        id: 'user_2',
+        name: '张三',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
+      },
+      {
+        id: 'user_3',
+        name: '李四',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi',
+      },
     ],
   },
   {
@@ -59,8 +75,16 @@ const mockConversations = [
     unreadCount: 1,
     online: true,
     members: [
-      { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
-      { id: 'user_4', name: '张经理', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager' },
+      {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      },
+      {
+        id: 'user_4',
+        name: '张经理',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager',
+      },
     ],
   },
   {
@@ -73,8 +97,16 @@ const mockConversations = [
     unreadCount: 0,
     online: false,
     members: [
-      { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
-      { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+      {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      },
+      {
+        id: 'user_3',
+        name: '李四',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi',
+      },
     ],
   },
 ];
@@ -82,16 +114,76 @@ const mockConversations = [
 // Mock messages data
 const mockMessages: Record<string, any[]> = {
   conv_1: [
-    { id: 'msg_1', sender: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' }, content: '大家好，欢迎加入研发团队群！', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), read: true },
-    { id: 'msg_2', sender: { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' }, content: '你好！很高兴加入团队 🎉', createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), read: true },
-    { id: 'msg_3', sender: { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' }, content: '新版本已经部署到测试环境了', createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), read: false },
+    {
+      id: 'msg_1',
+      sender: {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      },
+      content: '大家好，欢迎加入研发团队群！',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      read: true,
+    },
+    {
+      id: 'msg_2',
+      sender: {
+        id: 'user_2',
+        name: '张三',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
+      },
+      content: '你好！很高兴加入团队 🎉',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+      read: true,
+    },
+    {
+      id: 'msg_3',
+      sender: {
+        id: 'user_3',
+        name: '李四',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi',
+      },
+      content: '新版本已经部署到测试环境了',
+      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      read: false,
+    },
   ],
   conv_2: [
-    { id: 'msg_4', sender: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' }, content: '张经理，下周的发布计划确认了吗？', createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), read: true },
-    { id: 'msg_5', sender: { id: 'user_4', name: '张经理', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager' }, content: '确认了，周五正式发布', createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), read: false },
+    {
+      id: 'msg_4',
+      sender: {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      },
+      content: '张经理，下周的发布计划确认了吗？',
+      createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+      read: true,
+    },
+    {
+      id: 'msg_5',
+      sender: {
+        id: 'user_4',
+        name: '张经理',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=manager',
+      },
+      content: '确认了，周五正式发布',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+      read: false,
+    },
   ],
   conv_3: [
-    { id: 'msg_6', sender: { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' }, content: '设计稿已经更新了', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), read: true },
+    {
+      id: 'msg_6',
+      sender: {
+        id: 'user_3',
+        name: '李四',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi',
+      },
+      content: '设计稿已经更新了',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      read: true,
+    },
   ],
 };
 
@@ -120,7 +212,11 @@ export class MessagesController {
   async sendMessage(@Body() dto: SendMessageDto) {
     const newMessage = {
       id: `msg_${Date.now()}`,
-      sender: { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin' },
+      sender: {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+      },
       type: dto.type || 'text',
       content: dto.content,
       createdAt: new Date().toISOString(),
@@ -134,7 +230,7 @@ export class MessagesController {
   @ApiParam({ name: 'conversationId', description: 'Conversation ID' })
   @ApiResponse({ status: 200, description: 'Marked as read' })
   async markAsRead(@Param('conversationId') conversationId: string) {
-    const conversation = mockConversations.find(c => c.id === conversationId);
+    const conversation = mockConversations.find((c) => c.id === conversationId);
     if (conversation) {
       conversation.unreadCount = 0;
     }

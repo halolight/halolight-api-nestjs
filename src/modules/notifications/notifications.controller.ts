@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Put, Param, Delete } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -41,7 +35,11 @@ const mockNotifications = [
     read: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
     link: '/messages',
-    sender: { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan' },
+    sender: {
+      id: 'user_2',
+      name: '张三',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
+    },
   },
   {
     id: 'notif_4',
@@ -58,7 +56,11 @@ const mockNotifications = [
     content: '李四 已加入设计团队',
     read: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    sender: { id: 'user_3', name: '李四', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi' },
+    sender: {
+      id: 'user_3',
+      name: '李四',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisi',
+    },
   },
 ];
 
@@ -77,7 +79,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get unread notification count' })
   @ApiResponse({ status: 200, description: 'Unread count retrieved' })
   async getUnreadCount() {
-    const count = mockNotifications.filter(n => !n.read).length;
+    const count = mockNotifications.filter((n) => !n.read).length;
     return { count };
   }
 
@@ -86,7 +88,7 @@ export class NotificationsController {
   @ApiParam({ name: 'id', description: 'Notification ID' })
   @ApiResponse({ status: 200, description: 'Notification marked as read' })
   async markAsRead(@Param('id') id: string) {
-    const notification = mockNotifications.find(n => n.id === id);
+    const notification = mockNotifications.find((n) => n.id === id);
     if (notification) {
       notification.read = true;
     }
@@ -97,7 +99,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Mark all notifications as read' })
   @ApiResponse({ status: 200, description: 'All notifications marked as read' })
   async markAllAsRead() {
-    mockNotifications.forEach(n => (n.read = true));
+    mockNotifications.forEach((n) => (n.read = true));
     return { success: true };
   }
 

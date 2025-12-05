@@ -18,7 +18,7 @@ import {
   ApiQuery,
   ApiProperty,
 } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString, IsBoolean, IsArray } from 'class-validator';
+import { IsDateString, IsOptional, IsString, IsBoolean } from 'class-validator';
 
 class CreateEventDto {
   @ApiProperty({ description: 'Event title', example: 'Sprint Planning' })
@@ -94,8 +94,18 @@ const mockEvents: CalendarEvent[] = [
     location: '会议室A',
     allDay: false,
     attendees: [
-      { id: 'user_1', name: '系统管理员', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin', status: 'accepted' },
-      { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan', status: 'pending' },
+      {
+        id: 'user_1',
+        name: '系统管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+        status: 'accepted',
+      },
+      {
+        id: 'user_2',
+        name: '张三',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
+        status: 'pending',
+      },
     ],
     reminders: ['30m', '1h'],
     createdAt: new Date().toISOString(),
@@ -111,7 +121,12 @@ const mockEvents: CalendarEvent[] = [
     location: '线上会议',
     allDay: false,
     attendees: [
-      { id: 'user_2', name: '张三', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan', status: 'accepted' },
+      {
+        id: 'user_2',
+        name: '张三',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
+        status: 'accepted',
+      },
     ],
     reminders: ['1h'],
     createdAt: new Date().toISOString(),
@@ -143,10 +158,10 @@ export class CalendarController {
   async findAll(@Query('start') start?: string, @Query('end') end?: string) {
     let events = [...mockEvents];
     if (start) {
-      events = events.filter(e => new Date(e.start) >= new Date(start));
+      events = events.filter((e) => new Date(e.start) >= new Date(start));
     }
     if (end) {
-      events = events.filter(e => new Date(e.end) <= new Date(end));
+      events = events.filter((e) => new Date(e.end) <= new Date(end));
     }
     return events;
   }
@@ -156,8 +171,15 @@ export class CalendarController {
   @ApiParam({ name: 'id', description: 'Event ID' })
   @ApiResponse({ status: 200, description: 'Event found' })
   async findOne(@Param('id') id: string) {
-    const event = mockEvents.find(e => e.id === id);
-    return event || { id, title: 'Unknown Event', start: new Date().toISOString(), end: new Date().toISOString() };
+    const event = mockEvents.find((e) => e.id === id);
+    return (
+      event || {
+        id,
+        title: 'Unknown Event',
+        start: new Date().toISOString(),
+        end: new Date().toISOString(),
+      }
+    );
   }
 
   @Post()
@@ -179,7 +201,7 @@ export class CalendarController {
   @ApiParam({ name: 'id', description: 'Event ID' })
   @ApiResponse({ status: 200, description: 'Event updated' })
   async update(@Param('id') id: string, @Body() dto: Partial<CreateEventDto>) {
-    const event = mockEvents.find(e => e.id === id);
+    const event = mockEvents.find((e) => e.id === id);
     if (event) {
       Object.assign(event, dto);
     }
@@ -190,9 +212,12 @@ export class CalendarController {
   @ApiOperation({ summary: 'Add attendees to event' })
   @ApiParam({ name: 'id', description: 'Event ID' })
   @ApiResponse({ status: 200, description: 'Attendees added' })
-  async addAttendees(@Param('id') id: string, @Body() body: { attendeeIds: string[] }) {
-    const event = mockEvents.find(e => e.id === id);
-    const newAttendees = body.attendeeIds.map(aid => ({
+  async addAttendees(
+    @Param('id') id: string,
+    @Body() body: { attendeeIds: string[] },
+  ) {
+    const event = mockEvents.find((e) => e.id === id);
+    const newAttendees = body.attendeeIds.map((aid) => ({
       id: aid,
       name: `User ${aid}`,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${aid}`,
@@ -209,10 +234,13 @@ export class CalendarController {
   @ApiParam({ name: 'id', description: 'Event ID' })
   @ApiParam({ name: 'attendeeId', description: 'Attendee ID' })
   @ApiResponse({ status: 200, description: 'Attendee removed' })
-  async removeAttendee(@Param('id') id: string, @Param('attendeeId') attendeeId: string) {
-    const event = mockEvents.find(e => e.id === id);
+  async removeAttendee(
+    @Param('id') id: string,
+    @Param('attendeeId') attendeeId: string,
+  ) {
+    const event = mockEvents.find((e) => e.id === id);
     if (event) {
-      event.attendees = event.attendees.filter(a => a.id !== attendeeId);
+      event.attendees = event.attendees.filter((a) => a.id !== attendeeId);
     }
     return event || { id, attendees: [] };
   }
@@ -221,8 +249,11 @@ export class CalendarController {
   @ApiOperation({ summary: 'Reschedule event' })
   @ApiParam({ name: 'id', description: 'Event ID' })
   @ApiResponse({ status: 200, description: 'Event rescheduled' })
-  async reschedule(@Param('id') id: string, @Body() body: { start: string; end: string }) {
-    const event = mockEvents.find(e => e.id === id);
+  async reschedule(
+    @Param('id') id: string,
+    @Body() body: { start: string; end: string },
+  ) {
+    const event = mockEvents.find((e) => e.id === id);
     if (event) {
       event.start = body.start;
       event.end = body.end;

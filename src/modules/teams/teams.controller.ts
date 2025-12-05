@@ -158,10 +158,7 @@ export class TeamsController {
   @ApiParam({ name: 'userId', description: 'User ID', example: 'user_123' })
   @ApiResponse({ status: 200, description: 'Member removed from team' })
   @ApiResponse({ status: 404, description: 'Team or member not found' })
-  async removeMember(
-    @Param('id') id: string,
-    @Param('userId') userId: string,
-  ) {
+  async removeMember(@Param('id') id: string, @Param('userId') userId: string) {
     return {
       teamId: id,
       userId,
